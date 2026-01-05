@@ -1,0 +1,6 @@
+name,bgg_id,duration_min,complexity,min_players,max_players,mechanics,language_dependency,bgg_rank,description,year_published,available
+Catan,13,120,2.3,3,4,Trading;Dice Rolling;Route Building,baja,15,Players try to be the dominant force on the island of Catan by building settlements cities and roads,1995,true
+Pandemic,30549,45,2.4,2,4,Cooperative Play;Hand Management;Set Collection,media,50,Players work together as disease-fighting specialists to treat disease hotspots while researching cures,2008,true
+Dixit,39856,30,1.2,3,8,Storytelling;Voting;Hand Management,baja,120,A creative and imaginative game where players give clues using beautiful illustrated cards,2008,true
+Codenames,178900,15,1.3,2,8,Cooperative Play;Deduction;Partnerships,alta,45,Two teams compete to identify their agents using one-word clues from their spymaster,2015,true
+Azul,230802,40,1.8,2,4,Pattern Building;Set Collection;Tile Placement,ninguna,80,Players compete as artisans to decorate the walls of the Royal Palace of Evora,2017,true
