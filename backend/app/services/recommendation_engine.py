@@ -2,11 +2,21 @@
 Hybrid Recommendation Engine
 
 This module implements a hybrid recommendation system that combines:
-1. Collaborative Filtering: Based on user-game ratings
-2. Content-Based Filtering: Based on game features (categories, mechanics, etc.)
-3. Knowledge-Based: Pedagogical rules specific to CJEI
+1. Collaborative Filtering: Based on user-game ratings using user similarity
+2. Content-Based Filtering: Based on game features (categories, mechanics, complexity, etc.)
+3. Knowledge-Based Filtering: Pedagogical rules specific to CJEI requirements
 
-The system provides explainable recommendations with justifications.
+The system provides explainable recommendations with clear justifications for each suggestion.
+
+Architecture:
+- Each filtering method generates independent scores for games
+- Scores are combined using configurable weights (default: 40% collaborative, 40% content-based, 20% knowledge-based)
+- Explanations are generated for each recommendation based on the contributing factors
+- Feedback loop allows continuous improvement of the recommendation model
+
+Usage:
+    engine = RecommendationEngine()
+    recommendations = engine.get_recommendations(user_id=1, db=session, n_recommendations=10)
 """
 
 from typing import List, Dict, Tuple
@@ -17,6 +27,9 @@ from sqlalchemy.orm import Session
 class RecommendationEngine:
     """
     Hybrid recommendation engine for board games
+    
+    Combines collaborative filtering, content-based filtering, and knowledge-based rules
+    to provide personalized game recommendations with explanations.
     """
     
     def __init__(self):
