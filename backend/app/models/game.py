@@ -4,10 +4,15 @@ Implements RF-ING-01 and RF-ING-02 requirements.
 """
 from sqlalchemy import Boolean, Column, Float, Integer, String, Text, Enum as SQLEnum, DateTime, Index
 from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
+from typing import TYPE_CHECKING
 
 from ..core.database import Base
+
+if TYPE_CHECKING:
+    from .recommendation import Recommendation
 
 
 class LanguageDependency(str, enum.Enum):
@@ -75,6 +80,10 @@ class Game(Base):
     # Audit fields
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    
+    # Relationships
+    # Using string reference to avoid circular import
+    recommendations = relationship("Recommendation", back_populates="game", lazy="dynamic")
     
     # Indexes for common queries
     __table_args__ = (

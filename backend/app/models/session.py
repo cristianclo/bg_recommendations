@@ -4,6 +4,7 @@ Represents a teaching session with objectives, constraints, and requirements.
 """
 from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, Float, Enum as SQLEnum, JSON
 from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
 
@@ -80,6 +81,9 @@ class SessionProfile(Base):
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    
+    # Relationships
+    recommendations = relationship("Recommendation", back_populates="session_profile", cascade="all, delete-orphan")
     
     # Flag if this was used to generate recommendations
     has_recommendations = Column(Boolean, default=False)

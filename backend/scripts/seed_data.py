@@ -11,6 +11,7 @@ from app.core.database import SessionLocal, engine
 from app.models.game import Game, LanguageDependency, Base
 from app.models.session import SessionProfile, Modality
 from app.models.skill import Skill
+from app.models.recommendation import ScoringConfig
 from app.games.service import GameService
 from app.sessions.service import SessionProfileService
 from app.skills.service import SkillService
@@ -132,14 +133,15 @@ SAMPLE_GAMES = [
 ]
 
 # Sample session profiles for testing
+# NOTA: Sesiones diseñadas para coincidir con los juegos disponibles (2-8 jugadores)
 SAMPLE_SESSIONS = [
     {
-        "session_name": "Clase Trabajo en Equipo - Grupo Pequeño",
+        "session_name": "Taller Cooperación - Grupo Pequeño",
         "objectives": ["Desarrollar comunicación efectiva", "Fomentar cooperación"],
         "primary_skill_name": "Trabajo en equipo",
         "secondary_skill_name": "Comunicación",
         "available_time_min": 60,
-        "group_size": 15,
+        "group_size": 4,  # Coincide con Pandemic, Azul, Catan
         "max_language_dependency": LanguageDependency.MEDIA,
         "preferred_modality": Modality.COOPERATIVE,
         "notes": "Sesión introductoria para estudiantes de primer semestre",
@@ -151,7 +153,7 @@ SAMPLE_SESSIONS = [
         "primary_skill_name": "Pensamiento estratégico",
         "secondary_skill_name": "Análisis",
         "available_time_min": 90,
-        "group_size": 8,
+        "group_size": 5,  # Coincide con Ticket to Ride, 7 Wonders
         "max_language_dependency": LanguageDependency.BAJA,
         "preferred_modality": Modality.COMPETITIVE,
         "notes": "Grupo avanzado de administración",
@@ -162,59 +164,59 @@ SAMPLE_SESSIONS = [
         "objectives": ["Integración grupal", "Crear ambiente positivo"],
         "primary_skill_name": "Socialización",
         "secondary_skill_name": "Comunicación",
-        "available_time_min": 20,  # Tiempo limitado - generará warning
-        "group_size": 12,
+        "available_time_min": 30,  # Coincide con Dixit, Codenames (15-30 min)
+        "group_size": 6,  # Coincide con Coup, Codenames, Dixit
         "max_language_dependency": LanguageDependency.BAJA,
         "preferred_modality": Modality.ANY,
         "notes": "Actividad corta para inicio de semestre",
         "created_by_name": "Prof. Ana Martínez"
     },
     {
-        "session_name": "Evento Masivo - Feria Estudiantil",
-        "objectives": ["Promover trabajo colaborativo", "Gestión de proyectos"],
-        "primary_skill_name": "Trabajo en equipo",
-        "secondary_skill_name": "Liderazgo",
-        "available_time_min": 120,
-        "group_size": 45,  # Grupo muy grande - generará warning
+        "session_name": "Taller Creatividad y Arte",
+        "objectives": ["Estimular creatividad", "Desarrollar imaginación"],
+        "primary_skill_name": "Creatividad",
+        "secondary_skill_name": "Comunicación",
+        "available_time_min": 45,
+        "group_size": 7,  # Coincide con 7 Wonders, Dixit
         "max_language_dependency": LanguageDependency.NINGUNA,
         "preferred_modality": Modality.COOPERATIVE,
-        "notes": "Feria anual con múltiples grupos participando",
-        "created_by_name": "Coordinación Académica"
+        "notes": "Sesión para estudiantes de diseño",
+        "created_by_name": "Prof. Laura Sánchez"
     },
     {
-        "session_name": "Competencia Intergrupal",
-        "objectives": ["Desarrollar competitividad sana", "Pensamiento rápido"],
-        "primary_skill_name": "Agilidad mental",
-        "secondary_skill_name": "Trabajo bajo presión",
-        "available_time_min": 45,
-        "group_size": 24,  # Grupo grande - generará warning
+        "session_name": "Competencia Amistosa - Deducción",
+        "objectives": ["Desarrollar pensamiento lógico", "Trabajo en equipo"],
+        "primary_skill_name": "Deducción",
+        "secondary_skill_name": "Trabajo en equipo",
+        "available_time_min": 30,
+        "group_size": 8,  # Coincide con Codenames, Dixit (max 8 jugadores)
         "max_language_dependency": LanguageDependency.ALTA,
         "preferred_modality": Modality.COMPETITIVE,
-        "notes": "Torneo entre equipos de diferentes carreras",
+        "notes": "Sesión con énfasis en comunicación verbal",
         "created_by_name": "Prof. Luis Herrera"
     },
     {
-        "session_name": "Laboratorio de Negociación",
+        "session_name": "Práctica Negociación Comercial",
         "objectives": ["Desarrollar habilidades de negociación", "Pensamiento estratégico"],
         "primary_skill_name": "Negociación",
         "secondary_skill_name": "Persuasión",
         "available_time_min": 75,
-        "group_size": 6,
+        "group_size": 3,  # Coincide con Catan, Dixit (min 3 jugadores)
         "max_language_dependency": LanguageDependency.MEDIA,
         "preferred_modality": Modality.COMPETITIVE,
         "notes": "Sesión práctica para estudiantes de negocios",
         "created_by_name": "Prof. Diana Castro"
     },
     {
-        "session_name": "Taller Creatividad e Innovación",
-        "objectives": ["Fomentar pensamiento creativo", "Promover innovación"],
-        "primary_skill_name": "Creatividad",
-        "secondary_skill_name": "Innovación",
-        "available_time_min": 100,
-        "group_size": 10,
+        "session_name": "Laboratorio de Estrategia - Parejas",
+        "objectives": ["Pensamiento estratégico", "Trabajo en parejas"],
+        "primary_skill_name": "Pensamiento estratégico",
+        "secondary_skill_name": "Trabajo en equipo",
+        "available_time_min": 50,
+        "group_size": 2,  # Coincide con Pandemic, Azul, Ticket to Ride, Codenames (min 2)
         "max_language_dependency": LanguageDependency.BAJA,
         "preferred_modality": Modality.ANY,
-        "notes": "Taller para programa de emprendimiento",
+        "notes": "Sesión intensiva para parejas de trabajo",
         "created_by_name": "Prof. Roberto Silva"
     },
     {
@@ -222,11 +224,11 @@ SAMPLE_SESSIONS = [
         "objectives": ["Reducir estrés", "Integración social"],
         "primary_skill_name": "Bienestar",
         "secondary_skill_name": "Socialización",
-        "available_time_min": 15,  # Muy corto - generará warning
-        "group_size": 8,
+        "available_time_min": 20,  # Tiempo muy corto - generará warning pero hay juegos de 15 min
+        "group_size": 4,  # Coincide con muchos juegos
         "max_language_dependency": LanguageDependency.NINGUNA,
         "preferred_modality": Modality.ANY,
-        "notes": "Pausa activa durante jornada de exámenes",
+        "notes": "Pausa activa durante jornada de exámenes - juegos rápidos",
         "created_by_name": "Bienestar Universitario"
     }
 ]
@@ -421,6 +423,63 @@ def seed_database():
         
         print(f"\n   Total sessions created: {sessions_created}")
         print(f"   Total sessions in database: {db.query(SessionProfile).count()}")
+        
+        # ====================================================================
+        # 4. Seed Scoring Configurations (Module D)
+        # ====================================================================
+        
+        print("\n" + "="*70)
+        print("4. SEEDING SCORING CONFIGURATIONS (Module D)")
+        print("="*70)
+        
+        # Check if default config exists
+        existing_config = db.query(ScoringConfig).filter(
+            ScoringConfig.is_default == True
+        ).first()
+        
+        if existing_config:
+            print(f"  ⏭️  Default scoring config already exists: '{existing_config.name}'")
+        else:
+            # Create default scoring configuration
+            default_config = ScoringConfig(
+                name="Default CJEI Weights",
+                description="Configuración predeterminada equilibrada para recomendaciones del CJEI",
+                skill_weight=0.40,  # 40% skill match
+                mechanics_weight=0.30,  # 30% mechanics
+                difficulty_weight=0.20,  # 20% difficulty
+                ranking_weight=0.10,  # 10% BGG rank
+                is_active=True,
+                is_default=True
+            )
+            db.add(default_config)
+            db.commit()
+            print(f"  ✅ Created default config: {default_config.name}")
+            print(f"     └─ Weights: skill={default_config.skill_weight}, "
+                  f"mechanics={default_config.mechanics_weight}, "
+                  f"difficulty={default_config.difficulty_weight}, "
+                  f"ranking={default_config.ranking_weight}")
+        
+        # Add alternative configuration for educational focus
+        educational_config = db.query(ScoringConfig).filter(
+            ScoringConfig.name == "Educational Focus"
+        ).first()
+        
+        if not educational_config:
+            educational_config = ScoringConfig(
+                name="Educational Focus",
+                description="Mayor énfasis en habilidades y complejidad apropiada para contextos educativos",
+                skill_weight=0.50,  # 50% skill match - higher for education
+                mechanics_weight=0.25,  # 25% mechanics
+                difficulty_weight=0.20,  # 20% difficulty - important for learning
+                ranking_weight=0.05,  # 5% BGG rank - less important
+                is_active=False,
+                is_default=False
+            )
+            db.add(educational_config)
+            db.commit()
+            print(f"  ✅ Created alternative config: {educational_config.name}")
+        
+        print(f"\n   Total scoring configs: {db.query(ScoringConfig).count()}")
         
         print(f"\n✅ Database seeded successfully!")
         

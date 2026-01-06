@@ -6,9 +6,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .core.config import settings
+
+# Import models first to ensure proper relationship resolution
+from .models import recommendation, game, session, skill  # noqa: F401
+
 from .games.router import router as games_router
 from .sessions.router import router as sessions_router
 from .skills.router import router as skills_router
+from .recommendations.router import router as recommendations_router
 
 # Configure logging
 logging.basicConfig(
@@ -40,6 +45,7 @@ app.add_middleware(
 app.include_router(games_router, prefix=settings.API_PREFIX)
 app.include_router(sessions_router, prefix=settings.API_PREFIX)
 app.include_router(skills_router, prefix=settings.API_PREFIX)
+app.include_router(recommendations_router, prefix=settings.API_PREFIX)
 
 
 @app.get("/")
