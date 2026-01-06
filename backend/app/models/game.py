@@ -85,6 +85,14 @@ class Game(Base):
     # Using string reference to avoid circular import
     recommendations = relationship("Recommendation", back_populates="game", lazy="dynamic")
     
+    # Many-to-many relationship with skills (RF-TAX-03)
+    skills = relationship(
+        "Skill",
+        secondary="game_skills",
+        back_populates="games",
+        lazy="dynamic"
+    )
+    
     # Indexes for common queries
     __table_args__ = (
         Index('idx_game_available_complexity', 'available', 'complexity'),

@@ -390,4 +390,146 @@ class SkillService:
             warnings=warnings,
             errors=errors,
             total_skills_checked=len(all_skills)
+        )    
+    def associate_game(
+        self,
+        db: Session,
+        skill_id: int,
+        game_id: int,
+        justification: Optional[str] = None
+    ) -> bool:
+        """
+        Associate a skill with a game (RF-TAX-03).
+        
+        Args:
+            db: Database session
+            skill_id: Skill ID
+            game_id: Game ID
+            justification: Pedagogical justification for the association
+            
+        Returns:
+            True if association was created
+            
+        Raises:
+            NotFoundException: If skill or game not found
+            ValidationException: If association already exists
+        """
+        from ..models.game import Game
+        from ..models.skill import game_skills
+        from sqlalchemy import insert
+        
+        # Verify skill exists
+        skill = self.get_by_id(db, skill_id)
+        
+        # Verify game exists
+        game = db.query(Game).filter(Game.id == game_id).first()
+        if not game:
+            raise NotFoundException("Game", str(game_id))
+        
+        # Check if association already exists
+        existing = db.execute(
+            game_skills.select().where(
+                (game_skills.c.game_id == game_id) & 
+                (game_skills.c.skill_id == skill_id)
+            )
+        ).first()
+        
+        if existing:
+            raise ValidationException(f"Skill '{skill.name}' is already associated with game '{game.name}'")
+        
+        # Create association with justification
+        stmt = insert(game_skills).values(
+            game_id=game_id,
+            skill_id=skill_id,
+            justification=justification
         )
+        db.execute(stmt)
+        db.commit()
+        
+        logger.info(f"Associated skill '{skill.name}' (ID: {skill_id}) with game '{game.name}' (ID: {game_id})")
+        return True
+    
+    def dissociate_game(
+        self,
+        db: Session,
+        skill_id: int,
+        game_id: int
+    ) -> bool:
+        """
+        Remove association between a skill and a game (RF-TAX-03).
+        
+        Args:
+            db: Database session
+            skill_id: Skill ID
+            game_id: Game ID
+            
+        Returns:
+            True if association was removed
+            
+        Raises:
+            NotFoundException: If skill or game not found, or association doesn't exist
+        """
+        from ..models.game import Game
+        from ..models.skill import game_skills
+        from sqlalchemy import delete
+        
+        # Verify skill exists
+        skill = self.get_by_id(db, skill_id)
+        
+        # Verify game exists
+        game = db.query(Game).filter(Game.id == game_id).first()
+        if not game:
+            raise NotFoundException("Game", str(game_id))
+        
+        # Check if association exists
+        existing = db.execute(
+            game_skills.select().where(
+                (game_skills.c.game_id == game_id) & 
+                (game_skills.c.skill_id == skill_id)
+            )
+        ).first()
+        
+        if not existing:
+            raise NotFoundException(
+                "Association",
+                f"between skill '{skill.name}' and game '{game.name}'"
+            )
+        
+        # Remove association
+        stmt = delete(game_skills).where(
+            (game_skills.c.game_id == game_id) & 
+            (game_skills.c.skill_id == skill_id)
+        )
+        db.execute(stmt)
+        db.commit()
+        
+        logger.info(f"Dissociated skill '{skill.name}' (ID: {skill_id}) from game '{game.name}' (ID: {game_id})")
+        return True
+    
+    def get_skill_games(
+        self,
+        db: Session,
+        skill_id: int,
+        skip: int = 0,
+        limit: int = 100
+    ) -> List:
+        """
+        Get all games associated with a skill (RF-TAX-03).
+        
+        Args:
+            db: Database session
+            skill_id: Skill ID
+            skip: Number of records to skip
+            limit: Maximum number of records to return
+            
+        Returns:
+            List of Game instances
+            
+        Raises:
+            NotFoundException: If skill not found
+        """
+        from ..models.game import Game
+        
+        skill = self.get_by_id(db, skill_id)
+        
+        return skill.games.offset(skip).limit(limit).all()

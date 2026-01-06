@@ -15,6 +15,7 @@ from .sessions.router import router as sessions_router
 from .skills.router import router as skills_router
 from .recommendations.router import router as recommendations_router
 from .feedback.router import router as feedback_router
+from .admin.router import router as admin_router
 
 # Configure logging
 logging.basicConfig(
@@ -48,6 +49,7 @@ app.include_router(sessions_router, prefix=settings.API_PREFIX)
 app.include_router(skills_router, prefix=settings.API_PREFIX)
 app.include_router(recommendations_router, prefix=settings.API_PREFIX)
 app.include_router(feedback_router, prefix=settings.API_PREFIX)
+app.include_router(admin_router, prefix=settings.API_PREFIX)
 
 
 @app.get("/")

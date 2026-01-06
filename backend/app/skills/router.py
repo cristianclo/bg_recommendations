@@ -227,3 +227,60 @@ def delete_skill(
     """
     skill_service.delete(db, skill_id)
     return None
+
+@router.post("/{skill_id}/games/{game_id}", status_code=status.HTTP_201_CREATED)
+def associate_skill_with_game(
+    skill_id: int,
+    game_id: int,
+    justification: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Associate a skill with a game (RF-TAX-03).
+    
+    - **skill_id**: Skill ID
+    - **game_id**: Game ID  
+    - **justification**: Optional pedagogical justification for the association
+    
+    Returns success message if association is created.
+    """
+    skill_service.associate_game(db, skill_id, game_id, justification)
+    return {"message": f"Skill {skill_id} associated with game {game_id}"}
+
+
+@router.delete("/{skill_id}/games/{game_id}", status_code=status.HTTP_204_NO_CONTENT)
+def dissociate_skill_from_game(
+    skill_id: int,
+    game_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Remove association between a skill and a game (RF-TAX-03).
+    
+    - **skill_id**: Skill ID
+    - **game_id**: Game ID
+    """
+    skill_service.dissociate_game(db, skill_id, game_id)
+    return None
+
+
+@router.get("/{skill_id}/games", response_model=List[dict])
+def get_skill_games(
+    skill_id: int,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=100),
+    db: Session = Depends(get_db)
+):
+    """
+    Get all games associated with a skill (RF-TAX-03).
+    
+    - **skill_id**: Skill ID
+    - **skip**: Number of records to skip (pagination)
+    - **limit**: Maximum records to return (1-100)
+    
+    Returns list of games with their details.
+    """
+    from ..schemas.game import Game as GameSchema
+    
+    games = skill_service.get_skill_games(db, skill_id, skip, limit)
+    return [GameSchema.model_validate(game) for game in games]

@@ -59,7 +59,7 @@ class FeedbackService:
             )
         
         # Update recommendation with feedback
-        now = datetime.utcnow()
+        now = datetime.now()
         recommendation.was_used = feedback.was_used
         recommendation.user_feedback_score = feedback.user_feedback_score
         recommendation.feedback_date = now
@@ -111,7 +111,7 @@ class FeedbackService:
             )
         
         # Check if still editable
-        if recommendation.can_edit_until and datetime.utcnow() > recommendation.can_edit_until:
+        if recommendation.can_edit_until and datetime.now() > recommendation.can_edit_until:
             raise ValidationException(
                 f"Feedback edit period expired. Feedback was editable until {recommendation.can_edit_until}."
             )
@@ -177,7 +177,7 @@ class FeedbackService:
             feedback_date=recommendation.feedback_date,
             feedback_asesor=recommendation.feedback_asesor,
             can_edit_until=recommendation.can_edit_until,
-            is_editable=datetime.utcnow() <= recommendation.can_edit_until if recommendation.can_edit_until else False
+            is_editable=datetime.now() <= recommendation.can_edit_until if recommendation.can_edit_until else False
         )
     
     def get_game_feedback_statistics(
@@ -254,7 +254,7 @@ class FeedbackService:
                 feedback_date=r.feedback_date,
                 feedback_asesor=r.feedback_asesor,
                 can_edit_until=r.can_edit_until,
-                is_editable=datetime.utcnow() <= r.can_edit_until if r.can_edit_until else False
+                is_editable=datetime.now() <= r.can_edit_until if r.can_edit_until else False
             )
             for r in recent
         ]
@@ -440,7 +440,7 @@ class FeedbackService:
                 feedback_date=r.feedback_date,
                 feedback_asesor=r.feedback_asesor,
                 can_edit_until=r.can_edit_until,
-                is_editable=datetime.utcnow() <= r.can_edit_until if r.can_edit_until else False
+                is_editable=datetime.now() <= r.can_edit_until if r.can_edit_until else False
             )
             for r in feedback_records
         ]

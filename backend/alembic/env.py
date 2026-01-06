@@ -13,7 +13,12 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from app.core.database import Base
 from app.core.config import settings
-from app.models.game import Game  # Import all models here
+# Import all models for autogenerate support
+from app.models.game import Game
+from app.models.session import SessionProfile
+from app.models.skill import Skill
+from app.models.recommendation import Recommendation, ScoringConfig
+from app.models.admin import AuditLog, TaxonomySnapshot
 
 # this is the Alembic Config object
 config = context.config

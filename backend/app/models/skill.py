@@ -1,10 +1,21 @@
 """
 Skill model for hierarchical skills taxonomy (Module C).
-Implements RF-TAX-01 (hierarchical taxonomy).
+Implements RF-TAX-01 (hierarchical taxonomy) and RF-TAX-03 (game associations).
 """
-from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey, DateTime, func
+from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey, DateTime, Table, func
 from sqlalchemy.orm import relationship
 from ..core.database import Base
+
+
+# Association table for many-to-many relationship between skills and games
+game_skills = Table(
+    'game_skills',
+    Base.metadata,
+    Column('game_id', Integer, ForeignKey('games.id', ondelete='CASCADE'), primary_key=True),
+    Column('skill_id', Integer, ForeignKey('skills.id', ondelete='CASCADE'), primary_key=True),
+    Column('justification', Text, nullable=True),  # Pedagogical justification
+    Column('created_at', DateTime, server_default=func.now(), nullable=False)
+)
 
 
 class Skill(Base):
@@ -46,6 +57,14 @@ class Skill(Base):
         back_populates="parent",
         cascade="all, delete-orphan",
         foreign_keys=[parent_id]
+    )
+    
+    # Many-to-many relationship with games (RF-TAX-03)
+    games = relationship(
+        "Game",
+        secondary=game_skills,
+        back_populates="skills",
+        lazy="dynamic"
     )
     
     def __repr__(self):
