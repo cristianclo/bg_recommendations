@@ -48,15 +48,18 @@ export interface ValidationWarning {
 
 // Skill Types
 export interface Skill {
-  id: number;
+  id: string;
   name: string;
-  description: string | null;
-  parent_id: number | null;
-  is_active: boolean;
+  definition: string;
+  category: string;
+  examples: string[];
+  contexts: string;
+  parent_id: string | null;
+  level: number;
+  games_count: number;
   created_at: string;
   updated_at: string;
   children?: Skill[];
-  level?: number;
   path?: string;
 }
 
@@ -128,13 +131,13 @@ export interface ApiError {
 export interface SessionProfileFormData {
   session_name?: string;
   objectives: string[];
-  primary_skill_name: string;
-  secondary_skill_name?: string;
+  primary_skill_id: string;
+  secondary_skill_ids?: string[];
   available_time_min: number;
   group_size: number;
   max_language_dependency: 'ninguna' | 'baja' | 'media' | 'alta';
-  preferred_modality: 'competitive' | 'cooperative' | 'any';
-  notes?: string;
+  preferred_modality?: 'competitive' | 'cooperative' | 'any';
+  notes?: string | null;
 }
 
 export interface FeedbackFormData {

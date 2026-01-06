@@ -3,35 +3,34 @@ import type { Skill, PaginatedResponse } from '../types';
 
 export const skillsService = {
   getAll: async (params?: {
-    skip?: number;
-    limit?: number;
-    root_only?: boolean;
-    parent_id?: number;
-    search?: string;
-    active_only?: boolean;
-  }): Promise<PaginatedResponse<Skill>> => {
+    page?: number;
+    page_size?: number;
+    category?: string;
+    parent_id?: string;
+  }): Promise<Skill[]> => {
     const response = await apiClient.get('/skills', { params });
     return response.data;
   },
 
-  getById: async (id: number): Promise<Skill> => {
+  getById: async (id: string): Promise<Skill> => {
     const response = await apiClient.get(`/skills/${id}`);
     return response.data;
   },
 
   getTree: async (params?: {
-    root_id?: number;
-    active_only?: boolean;
+    root_id?: string;
   }): Promise<Skill[]> => {
     const response = await apiClient.get('/skills/tree', { params });
     return response.data;
   },
 
-  getGamesForSkill: async (skillId: number, params?: {
-    skip?: number;
-    limit?: number;
-  }): Promise<PaginatedResponse<any>> => {
-    const response = await apiClient.get(`/skills/${skillId}/games`, { params });
+  getAncestors: async (skillId: string): Promise<Skill[]> => {
+    const response = await apiClient.get(`/skills/${skillId}/ancestors`);
+    return response.data;
+  },
+
+  getDescendants: async (skillId: string): Promise<Skill[]> => {
+    const response = await apiClient.get(`/skills/${skillId}/descendants`);
     return response.data;
   },
 };

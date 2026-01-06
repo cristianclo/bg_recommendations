@@ -20,7 +20,14 @@ export const SkillCard: React.FC<SkillCardProps> = ({
     'border-orange-500 bg-orange-50',
   ];
 
-  const levelColor = levelColors[(skill.level || 0) % levelColors.length];
+  const levelColor = levelColors[(skill.level - 1) % levelColors.length];
+
+  const categoryColors: Record<string, string> = {
+    cognitiva: 'bg-blue-100 text-blue-800',
+    social: 'bg-green-100 text-green-800',
+    emocional: 'bg-purple-100 text-purple-800',
+    practica: 'bg-orange-100 text-orange-800',
+  };
 
   return (
     <div 
@@ -31,29 +38,45 @@ export const SkillCard: React.FC<SkillCardProps> = ({
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mb-2">
             <Star className="h-5 w-5 text-yellow-500" />
             <h3 className="text-lg font-semibold text-gray-900">
               {skill.name}
             </h3>
-            {!skill.is_active && (
-              <span className="px-2 py-1 text-xs bg-gray-200 text-gray-600 rounded">
-                Inactiva
-              </span>
-            )}
+            <span className={`px-2 py-1 text-xs rounded ${categoryColors[skill.category] || 'bg-gray-100 text-gray-800'}`}>
+              {skill.category}
+            </span>
+            <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
+              Nivel {skill.level}
+            </span>
           </div>
           
-          {skill.description && (
-            <p className="mt-2 text-sm text-gray-600">
-              {skill.description}
-            </p>
+          <p className="mt-2 text-sm text-gray-700 font-medium">
+            {skill.definition}
+          </p>
+
+          {skill.examples && skill.examples.length > 0 && (
+            <div className="mt-3">
+              <p className="text-xs font-semibold text-gray-600 mb-1">Ejemplos:</p>
+              <ul className="text-sm text-gray-600 list-disc list-inside">
+                {skill.examples.map((example, idx) => (
+                  <li key={idx}>{example}</li>
+                ))}
+              </ul>
+            </div>
           )}
 
-          {skill.path && (
-            <p className="mt-2 text-xs text-gray-500">
-              Ruta: {skill.path}
-            </p>
+          {skill.contexts && (
+            <div className="mt-3">
+              <p className="text-xs font-semibold text-gray-600 mb-1">Contextos de aplicación:</p>
+              <p className="text-sm text-gray-600">{skill.contexts}</p>
+            </div>
           )}
+
+          <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
+            <span>🎮 {skill.games_count} juegos asociados</span>
+            {skill.parent_id && <span>↳ Sub-habilidad</span>}
+          </div>
         </div>
 
         {showChildren && skill.children && skill.children.length > 0 && (

@@ -1,38 +1,22 @@
 import React from 'react';
 import type { Skill } from '../../types';
 import { SkillCard } from './SkillCard';
-import { LoadingSpinner } from '../common/LoadingSpinner';
-import { ErrorAlert } from '../common/ErrorAlert';
 
 interface SkillListProps {
   skills: Skill[];
-  loading?: boolean;
-  error?: string | null;
   onSkillSelect?: (skill: Skill) => void;
   showChildren?: boolean;
-  emptyMessage?: string;
 }
 
 export const SkillList: React.FC<SkillListProps> = ({
   skills,
-  loading = false,
-  error = null,
   onSkillSelect,
   showChildren = false,
-  emptyMessage = 'No se encontraron habilidades',
 }) => {
-  if (loading) {
-    return <LoadingSpinner text="Cargando habilidades..." />;
-  }
-
-  if (error) {
-    return <ErrorAlert message={error} title="Error al cargar habilidades" />;
-  }
-
   if (skills.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500 text-lg">{emptyMessage}</p>
+        <p className="text-gray-500 text-lg">No se encontraron habilidades</p>
       </div>
     );
   }
@@ -49,6 +33,9 @@ export const SkillList: React.FC<SkillListProps> = ({
 
   return (
     <div className="space-y-4">
+      <div className="mb-4 text-sm text-gray-600">
+        Mostrando {rootSkills.length} habilidades principales con {childSkills.length} sub-habilidades
+      </div>
       {skillsWithChildren.map((skill) => (
         <SkillCard
           key={skill.id}
