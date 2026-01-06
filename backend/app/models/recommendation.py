@@ -43,6 +43,16 @@ class Recommendation(Base):
     was_selected = Column(Boolean, default=False, nullable=True)  # Did asesor choose this one?
     user_feedback_score = Column(Integer, nullable=True)  # 1-5 if feedback was given
     
+    # Feedback fields (RF-RETRO-01)
+    was_used = Column(Boolean, nullable=True)  # Was the game actually used in session?
+    feedback_date = Column(DateTime, nullable=True)  # When feedback was given
+    feedback_asesor = Column(String(100), nullable=True)  # Asesor who gave feedback
+    skill_actually_worked = Column(String(200), nullable=True)  # Skill that was actually developed
+    what_worked_well = Column(Text, nullable=True)  # Qualitative: what worked (max 500 chars)
+    what_didnt_work = Column(Text, nullable=True)  # Qualitative: what didn't work (max 500 chars)
+    additional_notes = Column(Text, nullable=True)  # Additional observations (max 500 chars)
+    can_edit_until = Column(DateTime, nullable=True)  # Feedback editable for 7 days
+    
     # Relationships
     session_profile = relationship("SessionProfile", back_populates="recommendations")
     game = relationship("Game")

@@ -11,11 +11,11 @@ Sistema de recomendación de juegos de mesa para asesores pedagógicos del **Cen
 | **C - Taxonomía de Habilidades** | ✅ **COMPLETO** | RF-TAX-01, RF-TAX-02, RF-TAX-03 |
 | **D - Motor de Recomendación** | ✅ **COMPLETO** | RF-REC-01, RF-REC-02, RF-REC-03 |
 | **E - Explicabilidad y Trazabilidad** | ✅ **COMPLETO** | RF-EXP-01, RF-EXP-02 |
+| **G - Retroalimentación** | ✅ **COMPLETO** | RF-RETRO-01, RF-RETRO-02, RF-RETRO-03 |
 | F - Interfaz Web | 🔄 Pendiente | RF-UI-01, RF-UI-02, RF-UI-03 |
-| G - Retroalimentación | 🔶 Parcial | RF-RETRO-01, RF-RETRO-02 |
 | H - Administración | 🔄 Pendiente | RF-ADM-01, RF-ADM-02 |
 
-**Progreso MVP:** 15/19 requerimientos MUST implementados (79%) 🎯
+**Progreso MVP:** 18/19 requerimientos MUST implementados (95%) 🎯
 
 ## 🚀 Inicio Rápido
 
@@ -81,6 +81,7 @@ bg_recommendations/
 │   ├── tests/                      # ✅ Tests de integración y unitarios
 │   ├── scripts/                    # Seed data scripts
 │   └── sample_data/                # CSV/JSON de ejemplo
+├── DATABASE_ARCHITECTURE.md        # 🗄️ Arquitectura de base de datos
 ├── IMPLEMENTATION_SUMMARY.md        # ✅ Resumen técnico Módulo A
 ├── USAGE_GUIDE.md                  # ✅ Guía de uso con ejemplos
 ├── REPORTE_MODULO_D.md             # ✅ Reporte de pruebas Módulo D
@@ -211,8 +212,64 @@ bg_recommendations/
 - Funcionalidad de comparación operativa
 - Tracking histórico verificado
 
+### ✅ Módulo G - Sistema de Retroalimentación
+
+**RF-RETRO-01: Registro de Feedback Post-Sesión**
+- **Campos obligatorios:**
+  - `was_used`: Boolean (¿se usó el juego?)
+  - `user_feedback_score`: 1-5 estrellas (utilidad)
+  - `feedback_asesor`: Nombre del asesor
+- **Campos opcionales:**
+  - `skill_actually_worked`: Habilidad realmente desarrollada (máx 200 chars)
+  - `what_worked_well`: Qué funcionó bien (máx 500 chars)
+  - `what_didnt_work`: Qué no funcionó (máx 500 chars)
+  - `additional_notes`: Notas adicionales (máx 500 chars)
+- **Funcionalidad:**
+  - Feedback editable durante 7 días
+  - Asociación automática con asesor, fecha, perfil de sesión
+  - Marca recomendación como seleccionada (`was_selected=True`)
+  - Endpoint POST `/feedback/{recommendation_id}` para crear
+  - Endpoint PUT `/feedback/{recommendation_id}` para actualizar
+
+**RF-RETRO-02: Visualización de Feedback Histórico**
+- **Estadísticas agregadas por juego:**
+  - Utilidad promedio (X.X/5.0)
+  - Número total de usos
+  - Distribución de calificaciones {1: X, 2: Y, 3: Z, 4: W, 5: V}
+  - Habilidad más frecuentemente reportada
+  - Hasta 3 comentarios cualitativos más recientes
+- **Endpoint:** GET `/feedback/game/{game_id}/statistics`
+- **Uso:** Sección "Experiencias de Uso" en vista detalle de juego
+
+**RF-RETRO-03: Análisis de Patrones de Uso**
+- **Analíticas del sistema:**
+  - Total de feedback y juegos con feedback
+  - Utilidad promedio del sistema
+  - Top 10 juegos más usados
+  - "Joyas ocultas": Juegos con utilidad ≥4.5 y ≥3 usos
+  - "Candidatos a revisión": Juegos con utilidad <3.0 y ≥3 usos
+  - Distribución de feedback por habilidad
+- **Filtros:** Rango de fechas configurable
+- **Endpoint:** GET `/feedback/analytics/system`
+- **Uso:** Dashboard de analíticas para admins
+
+**Endpoints adicionales:**
+- GET `/feedback/{recommendation_id}` - Ver feedback específico
+- GET `/feedback/list` - Listar feedback con filtros (juego, asesor, score mínimo)
+- DELETE `/feedback/{recommendation_id}` - Eliminar feedback (admin)
+
+**Migración aplicada:** `005_add_feedback_fields`
+- 8 nuevos campos en tabla `recommendations`
+- 2 índices para queries eficientes (feedback_date, feedback_asesor)
+
+### 🔄 Módulos Pendientes
+
+- **Módulo F:** Interfaz web (RF-UI-01, RF-UI-02, RF-UI-03)
+- **Módulo H:** Administración (RF-ADM-01, RF-ADM-02)
+
 ## 📖 Documentación
 
+- **[Arquitectura de Base de Datos](DATABASE_ARCHITECTURE.md)** - Diseño completo de BD con ERD, tablas, relaciones e índices
 - **[Guía de Uso](USAGE_GUIDE.md)** - Ejemplos prácticos de API
 - **[Resumen Técnico](IMPLEMENTATION_SUMMARY.md)** - Detalles de implementación
 - **[Instrucciones Backend](.github/backend-instructions.md)** - Arquitectura completa
@@ -223,7 +280,13 @@ bg_recommendations/
 ```bash
 cd backend
 
-# Ejecutar todos los tests
+# 🎯 E2E Test: Flujo completo (RECOMENDADO)
+python tests/test_e2e_complete_flow.py
+
+# Ver reporte detallado
+cat tests/E2E_TEST_REPORT.md
+
+# Ejecutar todos los tests unitarios
 pytest -v
 
 # Con cobertura
@@ -240,12 +303,20 @@ pytest tests/test_module_e_explainability.py -v  # Módulo E
 python tests/test_recommendations_with_realistic_data.py
 ```
 
+**E2E Test Results:** ✅ **5/5 scenarios passed (100%)**
+- Scenario 1: Small Cooperative Session (4 students, 60 min)
+- Scenario 2: Large Competitive Session (8 students, 30 min)
+- Scenario 3: Time-Constrained Session (3 students, 20 min) - No results with suggestions
+- Scenario 4: No Results Handling (100 students, 15 min) - RF-REC-03 validation
+- Scenario 5: Skill-Based Recommendations (taxonomy integration)
+
 **Cobertura actual:**
 - Módulo A: >80%
 - Módulo B: ~85% (15 tests)
 - Módulo C: ~75% (13 tests)
 - Módulo D: ~80% (11 tests de integración)
 - Módulo E: 100% (5 tests comprehensive)
+- **E2E Integration: 100% (5 scenarios)**
 - **Total:** 53+ tests implementados
 
 ## 🛠️ Tech Stack
