@@ -1,10 +1,10 @@
 """
 Router for recommendation endpoints.
-Implements RF-REC-01, RF-REC-02, RF-REC-03 requirements.
+Implements RF-REC-01, RF-REC-02, RF-REC-03, RF-EXP-01, RF-EXP-02 requirements.
 """
 from fastapi import APIRouter, Depends, Query, Path
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 from ..core.database import get_db
 from ..core.exceptions import NotFoundException, ValidationException
@@ -18,6 +18,7 @@ from ..schemas.recommendation import (
 )
 from ..recommendations.engine import RecommendationEngine
 from ..recommendations.config_service import ScoringConfigService
+from ..recommendations.explainability_service import ExplainabilityService
 
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
 
@@ -301,3 +302,132 @@ def set_default_config(
     """
     service = ScoringConfigService(db)
     return service.set_as_default(config_id)
+
+
+# ============================================================================
+# Explainability Endpoints (RF-EXP-01, RF-EXP-02) - Module E
+# ============================================================================
+
+@router.get("/explanations/{recommendation_id}", response_model=Dict)
+def get_recommendation_explanation(
+    recommendation_id: int = Path(..., description="Recommendation ID"),
+    include_technical: bool = Query(False, description="Include technical scoring details"),
+    db: Session = Depends(get_db)
+):
+    """
+    Get detailed explanation for a specific recommendation.
+    
+    **RF-EXP-01**: Provides natural language explanation with at least 3 specific reasons:
+    - Skill/habilidades alignment
+    - Operational constraints (time, players)
+    - Relevant mechanics
+    - Quality indicators (BGG rank)
+    - Boost factors (if applicable)
+    
+    **Args:**
+    - **recommendation_id**: ID of the recommendation
+    - **include_technical**: Include technical scoring breakdown
+    
+    **Returns:**
+    - Detailed explanation with score components
+    - Game details in context
+    - Session context for full traceability
+    - Optional technical details
+    """
+    service = ExplainabilityService(db)
+    return service.get_recommendation_explanation(
+        recommendation_id=recommendation_id,
+        include_technical=include_technical
+    )
+
+
+@router.post("/explanations/compare", response_model=Dict)
+def compare_recommendations(
+    recommendation_ids: List[int] = Query(..., description="2-5 recommendation IDs to compare"),
+    db: Session = Depends(get_db)
+):
+    """
+    Compare multiple recommendations side-by-side.
+    
+    **RF-EXP-01**: Helps understand why one game was recommended over another.
+    Useful for pedagogical advisors to make informed decisions.
+    
+    **Args:**
+    - **recommendation_ids**: List of 2-5 recommendation IDs
+    
+    **Returns:**
+    - Comparative score analysis
+    - Key differences identified
+    - Natural language explanations of differences
+    
+    **Raises:**
+    - 400: If less than 2 or more than 5 IDs provided
+    - 404: If any recommendation not found
+    """
+    service = ExplainabilityService(db)
+    return service.compare_recommendations(recommendation_ids)
+
+
+@router.get("/traceability/{recommendation_id}", response_model=Dict)
+def get_traceability_report(
+    recommendation_id: int = Path(..., description="Recommendation ID"),
+    db: Session = Depends(get_db)
+):
+    """
+    Generate complete traceability report for audit purposes.
+    
+    **RF-EXP-02**: Complete, non-editable decision trail including:
+    - Timestamp and user
+    - Complete session profile snapshot
+    - Scoring configuration used
+    - All score components
+    - Decision rationale
+    - User outcome (if selected/feedback)
+    
+    **Purpose:** Institutional knowledge preservation, system evaluation, auditing.
+    Allows answering: "Why did we recommend game X for session Y 3 months ago?"
+    
+    **Args:**
+    - **recommendation_id**: Recommendation ID
+    
+    **Returns:**
+    - Complete audit trail (read-only, immutable)
+    - Session and game snapshots
+    - Scoring details
+    - Outcome tracking
+    """
+    service = ExplainabilityService(db)
+    return service.get_traceability_report(recommendation_id)
+
+
+@router.get("/history/session/{session_profile_id}", response_model=List[Dict])
+def get_session_recommendation_history(
+    session_profile_id: int = Path(..., description="Session profile ID"),
+    limit: int = Query(10, ge=1, le=50, description="Maximum number of historical entries"),
+    db: Session = Depends(get_db)
+):
+    """
+    Get historical recommendations for a specific session profile.
+    
+    **RF-EXP-02**: Traceability over time. View all past recommendation batches
+    generated for this session profile.
+    
+    **Use cases:**
+    - Track how recommendations changed over time
+    - Analyze pattern of selections
+    - Evaluate system performance for specific contexts
+    
+    **Args:**
+    - **session_profile_id**: Session profile ID
+    - **limit**: Maximum number of historical batches (default: 10)
+    
+    **Returns:**
+    - List of recommendation batches ordered by timestamp (newest first)
+    - Each batch includes: timestamp, games recommended, selection status
+    """
+    service = ExplainabilityService(db)
+    return service.get_session_recommendation_history(
+        session_profile_id=session_profile_id,
+        limit=limit
+    )
+

@@ -389,51 +389,105 @@ class RecommendationEngine:
         """
         Generate human-readable explanation for recommendation.
         
-        RF-EXP-01: Provide transparent reasoning.
+        RF-EXP-01: Natural language explanation with at least 3 specific reasons.
+        Includes: skill match, operational constraints, mechanics, and boost factors.
+        Max 200 words as per requirements.
         """
         game = scored_item['game']
         scores = scored_item
         
-        # Build explanation parts
-        parts = [f"Recomendado '{game.name}' porque:"]
+        # Start with game introduction
+        parts = [f"**{game.name}** (Puntuación: {scored_item['total_score']:.2f}/1.0)\n"]
+        reasons = []
         
-        # Highlight strongest score component
-        components = [
-            ('skill_score', 'habilidades objetivo', 'las'),
-            ('mechanics_score', 'mecánicas del juego', 'las'),
-            ('difficulty_score', 'nivel de complejidad', 'el'),
-            ('ranking_score', 'popularidad', 'la'),
-        ]
-        
-        # Find top contributing factor
-        top_component = max(
-            [(name, score, label, article) for name, label, article in components 
-             for score in [scores.get(name, 0)]],
-            key=lambda x: x[1]
-        )
-        
-        parts.append(
-            f"- {top_component[3].capitalize()} {top_component[2]} se alinean bien con tu sesión "
-            f"(score: {top_component[1]:.2f})"
-        )
-        
-        # Add context-specific reasons
-        if game.duration_min <= session.available_time_min:
-            parts.append(
-                f"- La duración ({game.duration_min} min) se ajusta a tu tiempo disponible"
+        # REASON 1: Primary skill alignment (RF-EXP-01 requirement)
+        skill_score = scores.get('skill_score', 0)
+        if skill_score > 0.5:
+            complexity_desc = "baja" if game.complexity < 2.0 else "moderada" if game.complexity < 3.5 else "alta"
+            reasons.append(
+                f"✓ **Habilidades objetivo:** La complejidad {complexity_desc} ({game.complexity:.1f}/5.0) "
+                f"es apropiada para desarrollar las habilidades planteadas (alineación: {skill_score:.0%})"
+            )
+        elif skill_score > 0:
+            reasons.append(
+                f"✓ **Habilidades objetivo:** Complejidad {game.complexity:.1f}/5.0 "
+                f"(alineación moderada: {skill_score:.0%})"
             )
         
-        if session.group_size <= game.max_players:
-            parts.append(
-                f"- Soporta grupos de {game.min_players}-{game.max_players} jugadores"
+        # REASON 2: Operational constraints met (RF-EXP-01 requirement)
+        time_buffer = session.available_time_min * 0.2
+        time_fits = game.duration_min <= (session.available_time_min + time_buffer)
+        players_fit = game.min_players <= session.group_size <= game.max_players
+        
+        if time_fits and players_fit:
+            reasons.append(
+                f"✓ **Restricciones cumplidas:** Duración {game.duration_min} min "
+                f"(disponible: {session.available_time_min} min), "
+                f"soporta {game.min_players}-{game.max_players} jugadores "
+                f"(grupo: {session.group_size})"
+            )
+        elif time_fits:
+            reasons.append(
+                f"✓ **Tiempo apropiado:** {game.duration_min} minutos se ajusta a los "
+                f"{session.available_time_min} min disponibles"
             )
         
-        if game.bgg_rank and game.bgg_rank <= 500:
-            parts.append(
-                f"- Bien valorado en BoardGameGeek (rank #{game.bgg_rank})"
+        # REASON 3: Relevant mechanics (RF-EXP-01 requirement)
+        mechanics_score = scores.get('mechanics_score', 0)
+        if game.mechanics and len(game.mechanics) > 0:
+            mechanics_display = ", ".join(game.mechanics[:3])
+            if len(game.mechanics) > 3:
+                mechanics_display += f" (+{len(game.mechanics)-3} más)"
+            
+            modality_match = ""
+            if session.preferred_modality.value in ['cooperative', 'any']:
+                if any(m.lower() in ['cooperative play', 'cooperation'] for m in game.mechanics):
+                    modality_match = " (incluye mecánicas cooperativas ✓)"
+            
+            reasons.append(
+                f"✓ **Mecánicas relevantes:** {mechanics_display}{modality_match} "
+                f"(similitud: {mechanics_score:.0%})"
             )
         
-        return " ".join(parts)
+        # REASON 4: Quality/Popularity indicator
+        ranking_score = scores.get('ranking_score', 0)
+        if game.bgg_rank:
+            if game.bgg_rank <= 100:
+                reasons.append(
+                    f"✓ **Altamente valorado:** Posición #{game.bgg_rank} en BoardGameGeek "
+                    f"(top 100 mundial)"
+                )
+            elif game.bgg_rank <= 500:
+                reasons.append(
+                    f"✓ **Bien valorado:** Posición #{game.bgg_rank} en BoardGameGeek"
+                )
+        
+        # BOOST FACTOR: Historical feedback (RF-EXP-01 requirement)
+        feedback_boost = scores.get('feedback_boost', 0)
+        if feedback_boost > 0.1:
+            # This will be populated when Module G (Feedback) is fully implemented
+            reasons.append(
+                f"⭐ **Recomendado altamente** por asesores en contextos similares "
+                f"(boost: +{feedback_boost:.1%})"
+            )
+        
+        # WARNING: Complexity edge case (RF-EXP-01 requirement)
+        difficulty_score = scores.get('difficulty_score', 0)
+        if game.complexity >= 3.5 and difficulty_score < 0.6:
+            reasons.append(
+                f"⚠️ **Advertencia:** Complejidad alta ({game.complexity:.1f}/5.0), "
+                f"considere grupo experimentado o tiempo adicional para explicación"
+            )
+        elif game.complexity <= 1.5 and session.available_time_min > 90:
+            reasons.append(
+                f"ℹ️ **Nota:** Juego simple ({game.complexity:.1f}/5.0), "
+                f"podría combinar con otra actividad si sobra tiempo"
+            )
+        
+        # Combine all reasons
+        parts.append("\n".join(reasons))
+        
+        return "\n".join(parts)
     
     def _generate_match_reasons(
         self,

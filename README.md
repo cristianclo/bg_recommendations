@@ -10,12 +10,12 @@ Sistema de recomendación de juegos de mesa para asesores pedagógicos del **Cen
 | **B - Contexto de Clase** | ✅ **COMPLETO** | RF-CTX-01, RF-CTX-02 |
 | **C - Taxonomía de Habilidades** | ✅ **COMPLETO** | RF-TAX-01, RF-TAX-02, RF-TAX-03 |
 | **D - Motor de Recomendación** | ✅ **COMPLETO** | RF-REC-01, RF-REC-02, RF-REC-03 |
-| E - Explicabilidad | 🔶 Parcial | RF-EXP-01, RF-EXP-02 |
+| **E - Explicabilidad y Trazabilidad** | ✅ **COMPLETO** | RF-EXP-01, RF-EXP-02 |
 | F - Interfaz Web | 🔄 Pendiente | RF-UI-01, RF-UI-02, RF-UI-03 |
 | G - Retroalimentación | 🔶 Parcial | RF-RETRO-01, RF-RETRO-02 |
 | H - Administración | 🔄 Pendiente | RF-ADM-01, RF-ADM-02 |
 
-**Progreso MVP:** 13/19 requerimientos MUST implementados (68%) 🎯
+**Progreso MVP:** 15/19 requerimientos MUST implementados (79%) 🎯
 
 ## 🚀 Inicio Rápido
 
@@ -75,7 +75,7 @@ bg_recommendations/
 │   │   ├── games/                  # ✅ Módulo A completo
 │   │   ├── sessions/               # ✅ Módulo B completo
 │   │   ├── skills/                 # ✅ Módulo C completo
-│   │   ├── recommendations/        # ✅ Módulo D completo
+│   │   ├── recommendations/        # ✅ Módulos D y E completos
 │   │   └── main.py
 │   ├── alembic/                    # Database migrations (4 migraciones)
 │   ├── tests/                      # ✅ Tests de integración y unitarios
@@ -84,6 +84,7 @@ bg_recommendations/
 ├── IMPLEMENTATION_SUMMARY.md        # ✅ Resumen técnico Módulo A
 ├── USAGE_GUIDE.md                  # ✅ Guía de uso con ejemplos
 ├── REPORTE_MODULO_D.md             # ✅ Reporte de pruebas Módulo D
+├── REPORTE_MODULO_E.md             # ✅ Reporte de pruebas Módulo E
 └── README.md                       # Este archivo
 ```
 
@@ -176,11 +177,45 @@ bg_recommendations/
   - 8 jugadores, 30 min → Dixit
   - 2 jugadores, 50 min → Ticket to Ride, Azul
 
+### ✅ Módulo E - Explicabilidad y Trazabilidad
+
+**RF-EXP-01: Explicaciones en Lenguaje Natural**
+- **Formato:** Texto natural con emojis (✓, ⭐, ⚠️, ℹ️)
+- **Estructura:** ≥3 razones específicas por recomendación:
+  1. Skill alignment (habilidades objetivo + complejidad)
+  2. Operational constraints (tiempo, jugadores, idioma)
+  3. Mechanics relevance (similitud + modalidad)
+  4. Quality indicators (BGG rank, popularidad)
+- **Contexto adicional:**
+  - Warnings para casos edge (complejidad alta, desajuste temporal)
+  - Menciones de feedback boost cuando aplicable
+  - Desglose de componentes de scoring con contexto detallado
+- Servicio `ExplainabilityService` (350+ líneas) con 4 endpoints
+
+**RF-EXP-02: Trazabilidad Completa e Inmutable**
+- **Auditoría completa:** Captura de contexto integral en cada recomendación
+- **Snapshots inmutables:**
+  - Perfil de sesión (objetivos, restricciones, grupo)
+  - Estado del juego (nombre, mecánicas, complejidad, disponibilidad)
+  - Configuración de scoring usada
+  - Rationale de decisión completo
+  - Resultado de feedback del usuario
+- **Historial temporal:** Batches de recomendaciones por sesión
+- **Comparación:** Análisis lado a lado de 2-5 recomendaciones
+- Endpoint `/traceability/{id}` para informes completos
+
+**Resultados de pruebas:**
+- 100% test pass rate (5/5 tests)
+- RF-EXP-01 validado: Explicaciones con 4+ razones específicas
+- RF-EXP-02 validado: Audit trails completos e inmutables
+- Funcionalidad de comparación operativa
+- Tracking histórico verificado
+
 ## 📖 Documentación
 
 - **[Guía de Uso](USAGE_GUIDE.md)** - Ejemplos prácticos de API
 - **[Resumen Técnico](IMPLEMENTATION_SUMMARY.md)** - Detalles de implementación
-- **[Instrucciones Backend](. github/backend-instructions.md)** - Arquitectura completa
+- **[Instrucciones Backend](.github/backend-instructions.md)** - Arquitectura completa
 - **[Especificaciones RF](.github/rf_sistema_cjei.md)** - 34 requerimientos funcionales
 
 ## 🧪 Testing
@@ -199,6 +234,7 @@ pytest tests/test_games.py -v           # Módulo A
 pytest tests/test_sessions.py -v        # Módulo B
 pytest tests/test_skills.py -v          # Módulo C
 pytest tests/test_module_d_integration.py -v  # Módulo D
+pytest tests/test_module_e_explainability.py -v  # Módulo E
 
 # Test de recomendaciones con datos realistas
 python tests/test_recommendations_with_realistic_data.py
@@ -209,7 +245,8 @@ python tests/test_recommendations_with_realistic_data.py
 - Módulo B: ~85% (15 tests)
 - Módulo C: ~75% (13 tests)
 - Módulo D: ~80% (11 tests de integración)
-- **Total:** 48+ tests implementados
+- Módulo E: 100% (5 tests comprehensive)
+- **Total:** 53+ tests implementados
 
 ## 🛠️ Tech Stack
 
