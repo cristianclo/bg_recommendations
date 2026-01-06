@@ -7,7 +7,7 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, func
 from typing import List, Dict, Tuple, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import math
 
 from ..models.game import Game, LanguageDependency
@@ -16,6 +16,7 @@ from ..models.recommendation import Recommendation, ScoringConfig
 from ..schemas.recommendation import (
     RecommendationCreate,
     RecommendationResponse,
+    Recommendation as RecommendationSchema,
     ScoringConfig as ScoringConfigSchema
 )
 from ..core.exceptions import NotFoundException
@@ -142,13 +143,39 @@ class RecommendationEngine:
         session.has_recommendations = True
         self.db.commit()
         
+        # Convert SQLAlchemy objects to Pydantic schemas
+        # We need to expunge objects to avoid lazy loading the game relationship
+        recommendation_schemas = []
+        for rec in recommendations:
+            # Create dict manually to avoid lazy loading relationships
+            rec_dict = {
+                'id': rec.id,
+                'session_profile_id': rec.session_profile_id,
+                'game_id': rec.game_id,
+                'rank': rec.rank,
+                'total_score': rec.total_score,
+                'skill_score': rec.skill_score,
+                'mechanics_score': rec.mechanics_score,
+                'difficulty_score': rec.difficulty_score,
+                'ranking_score': rec.ranking_score,
+                'feedback_boost': rec.feedback_boost,
+                'weights_used': rec.weights_used,
+                'explanation_text': rec.explanation_text,
+                'match_reasons': rec.match_reasons,
+                'was_selected': rec.was_selected,
+                'user_feedback_score': rec.user_feedback_score,
+                'created_at': rec.created_at,
+                'game': None  # Explicitly set to None to avoid serialization issues
+            }
+            recommendation_schemas.append(RecommendationSchema(**rec_dict))
+        
         # Build response
         return RecommendationResponse(
             session_profile_id=session_profile_id,
-            recommendations=recommendations,
+            recommendations=recommendation_schemas,
             total_candidates=len(candidates),
             scoring_config_used=ScoringConfigSchema.model_validate(config),
-            generation_timestamp=datetime.utcnow(),
+            generation_timestamp=datetime.now(timezone.utc),
             has_results=True,
             relaxation_suggestions=None
         )
@@ -611,7 +638,7 @@ class RecommendationEngine:
             recommendations=[],
             total_candidates=0,
             scoring_config_used=ScoringConfigSchema.model_validate(config),
-            generation_timestamp=datetime.utcnow(),
+            generation_timestamp=datetime.now(timezone.utc),
             has_results=False,
             relaxation_suggestions=suggestions
         )

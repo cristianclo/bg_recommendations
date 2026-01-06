@@ -17,15 +17,25 @@ export const RecommendationList: React.FC<RecommendationListProps> = ({
   error = null,
   onFeedback,
 }) => {
+  console.log('📋 RecommendationList props:', {
+    recommendationsCount: recommendations?.length || 0,
+    loading,
+    error,
+    recommendations
+  });
+
   if (loading) {
+    console.log('⏳ Showing loading state');
     return <LoadingSpinner text="Generando recomendaciones..." />;
   }
 
   if (error) {
+    console.log('❌ Showing error:', error);
     return <ErrorAlert message={error} title="Error al generar recomendaciones" />;
   }
 
   if (recommendations.length === 0) {
+    console.log('⚠️ No recommendations found');
     return (
       <div className="text-center py-12 bg-white rounded-lg shadow">
         <p className="text-gray-500 text-lg">
@@ -37,6 +47,8 @@ export const RecommendationList: React.FC<RecommendationListProps> = ({
       </div>
     );
   }
+
+  console.log('✅ Rendering', recommendations.length, 'recommendations');
 
   return (
     <div className="space-y-6">

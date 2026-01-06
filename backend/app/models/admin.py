@@ -1,6 +1,6 @@
 """Admin models for Module H - Administration System."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, String, Text, DateTime, Enum as SQLEnum, ForeignKey
 from sqlalchemy.orm import relationship
 import enum
@@ -48,7 +48,7 @@ class AuditLog(Base):
     user_role = Column(String(50), nullable=True)  # "admin", "asesor", etc.
     
     # When
-    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     
     # Details
     description = Column(Text, nullable=True)  # Human-readable description
@@ -79,7 +79,7 @@ class TaxonomySnapshot(Base):
     
     # Versioning
     version = Column(String(50), nullable=False, unique=True, index=True)  # e.g., "v1.0", "v1.1"
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     created_by = Column(String(100), nullable=False)
     
     # Snapshot data

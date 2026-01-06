@@ -6,14 +6,14 @@ import type { Skill } from '../../types';
 
 const sessionProfileSchema = z.object({
   session_name: z.string().optional(),
-  objectives: z.array(z.string()).min(1, 'Debe especificar al menos un objetivo'),
-  primary_skill_id: z.string().min(1, 'Debe seleccionar una habilidad primaria'),
-  secondary_skill_ids: z.array(z.string()).optional(),
+  objectives: z.array(z.string().min(1, 'El objetivo no puede estar vacío')).min(1, 'Debe especificar al menos un objetivo'),
+  primary_skill_name: z.string().min(1, 'Debe seleccionar una habilidad primaria'),
+  secondary_skill_name: z.string().optional(),
   available_time_min: z.number().min(15, 'Mínimo 15 minutos').max(240, 'Máximo 240 minutos'),
   group_size: z.number().min(1, 'Mínimo 1 persona').max(100, 'Máximo 100 personas'),
   max_language_dependency: z.enum(['ninguna', 'baja', 'media', 'alta']),
-  preferred_modality: z.enum(['competitive', 'cooperative', 'any']).optional(),
-  notes: z.string().max(500, 'Máximo 500 caracteres').optional().nullable(),
+  preferred_modality: z.enum(['competitive', 'cooperative', 'any']),
+  additional_constraints: z.record(z.string(), z.any()).optional(),
 });
 
 type SessionProfileFormData = z.infer<typeof sessionProfileSchema>;
@@ -130,44 +130,40 @@ export const SessionProfileForm: React.FC<SessionProfileFormProps> = ({
       {/* Skills */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="primary_skill_id" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="primary_skill_name" className="block text-sm font-medium text-gray-700 mb-1">
             Habilidad primaria *
           </label>
           <select
-            {...register('primary_skill_id')}
+            {...register('primary_skill_name')}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">Seleccionar...</option>
             {skills.map((skill) => (
-              <option key={skill.id} value={skill.id}>
+              <option key={skill.id} value={skill.name}>
                 {skill.name} ({skill.category})
               </option>
             ))}
           </select>
-          {errors.primary_skill_id && (
-            <p className="mt-1 text-sm text-red-600">{errors.primary_skill_id.message}</p>
+          {errors.primary_skill_name && (
+            <p className="mt-1 text-sm text-red-600">{errors.primary_skill_name.message}</p>
           )}
         </div>
 
         <div>
-          <label htmlFor="secondary_skill_ids" className="block text-sm font-medium text-gray-700 mb-1">
-            Habilidades secundarias (opcional)
+          <label htmlFor="secondary_skill_name" className="block text-sm font-medium text-gray-700 mb-1">
+            Habilidad secundaria (opcional)
           </label>
           <select
-            {...register('secondary_skill_ids')}
-            multiple
+            {...register('secondary_skill_name')}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            size={4}
           >
+            <option value="">Ninguna</option>
             {skills.map((skill) => (
-              <option key={skill.id} value={skill.id}>
+              <option key={skill.id} value={skill.name}>
                 {skill.name} ({skill.category})
               </option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-gray-500">
-            Mantén presionado Cmd/Ctrl para seleccionar múltiples
-          </p>
         </div>
       </div>
 
@@ -236,22 +232,6 @@ export const SessionProfileForm: React.FC<SessionProfileFormProps> = ({
             <option value="cooperative">Cooperativo</option>
           </select>
         </div>
-      </div>
-
-      {/* Notes */}
-      <div>
-        <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
-          Notas adicionales
-        </label>
-        <textarea
-          {...register('notes')}
-          rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="Cualquier otra consideración o restricción..."
-        />
-        {errors.notes && (
-          <p className="mt-1 text-sm text-red-600">{errors.notes.message}</p>
-        )}
       </div>
 
       {/* Submit Button */}

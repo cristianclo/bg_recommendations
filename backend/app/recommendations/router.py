@@ -79,7 +79,31 @@ def get_session_recommendations(
         RecommendationModel.session_profile_id == session_id
     ).order_by(RecommendationModel.rank).all()
     
-    return recommendations
+    # Convert to Pydantic schemas to avoid serialization issues
+    result = []
+    for rec in recommendations:
+        rec_dict = {
+            'id': rec.id,
+            'session_profile_id': rec.session_profile_id,
+            'game_id': rec.game_id,
+            'rank': rec.rank,
+            'total_score': rec.total_score,
+            'skill_score': rec.skill_score,
+            'mechanics_score': rec.mechanics_score,
+            'difficulty_score': rec.difficulty_score,
+            'ranking_score': rec.ranking_score,
+            'feedback_boost': rec.feedback_boost,
+            'weights_used': rec.weights_used,
+            'explanation_text': rec.explanation_text,
+            'match_reasons': rec.match_reasons,
+            'was_selected': rec.was_selected,
+            'user_feedback_score': rec.user_feedback_score,
+            'created_at': rec.created_at,
+            'game': None
+        }
+        result.append(Recommendation(**rec_dict))
+    
+    return result
 
 
 @router.put("/recommendation/{rec_id}/feedback", response_model=Recommendation)

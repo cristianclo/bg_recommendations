@@ -5,7 +5,7 @@ Represents a teaching session with objectives, constraints, and requirements.
 from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, Float, Enum as SQLEnum, JSON
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 import enum
 
 from ..core.database import Base
@@ -34,7 +34,7 @@ class SessionProfile(Base):
     
     # Session identification (RF-CTX-01)
     session_name = Column(String(255), nullable=True)  # Optional friendly name
-    objectives = Column(ARRAY(String), nullable=False)  # At least 1 required (RF-CTX-01)
+    objectives = Column(JSON, nullable=False)  # At least 1 required (RF-CTX-01), use JSON for SQLite compatibility
     
     # Skills to work on (RF-CTX-01)
     # Note: These will reference Skill model once Module C is implemented
@@ -79,8 +79,8 @@ class SessionProfile(Base):
     created_by_name = Column(String(255), nullable=True)  # Temporary
     
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
     
     # Relationships
     recommendations = relationship("Recommendation", back_populates="session_profile", cascade="all, delete-orphan")

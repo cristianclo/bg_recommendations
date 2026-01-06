@@ -131,13 +131,13 @@ export interface ApiError {
 export interface SessionProfileFormData {
   session_name?: string;
   objectives: string[];
-  primary_skill_id: string;
-  secondary_skill_ids?: string[];
+  primary_skill_name: string;
+  secondary_skill_name?: string;
   available_time_min: number;
   group_size: number;
   max_language_dependency: 'ninguna' | 'baja' | 'media' | 'alta';
-  preferred_modality?: 'competitive' | 'cooperative' | 'any';
-  notes?: string | null;
+  preferred_modality: 'competitive' | 'cooperative' | 'any';
+  additional_constraints?: Record<string, any>;
 }
 
 export interface FeedbackFormData {

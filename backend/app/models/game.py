@@ -2,10 +2,10 @@
 Game model representing board games in the catalog.
 Implements RF-ING-01 and RF-ING-02 requirements.
 """
-from sqlalchemy import Boolean, Column, Float, Integer, String, Text, Enum as SQLEnum, DateTime, Index
+from sqlalchemy import Boolean, Column, Float, Integer, String, Text, Enum as SQLEnum, DateTime, Index, JSON
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 import enum
 from typing import TYPE_CHECKING
 
@@ -56,7 +56,8 @@ class Game(Base):
     max_players = Column(Integer, nullable=False, default=4)
     
     # Mechanics (controlled vocabulary, RF-ING-02)
-    mechanics = Column(ARRAY(String), nullable=False, default=list)
+    # Use JSON for SQLite compatibility, PostgreSQL will use ARRAY
+    mechanics = Column(JSON, nullable=False, default=list)
     
     # Language dependency (enum, RF-ING-02)
     language_dependency = Column(
@@ -78,8 +79,8 @@ class Game(Base):
     has_partial_data = Column(Boolean, default=False)  # Mark incomplete records
     
     # Audit fields
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
     
     # Relationships
     # Using string reference to avoid circular import

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, FileText, Calendar, Users, Clock } from 'lucide-react';
@@ -11,12 +11,14 @@ import {
 } from '../components';
 import { recommendationsService } from '../services/recommendations.service';
 import { sessionsService } from '../services/sessions.service';
+import { gamesService } from '../services/games.service';
 import type { Recommendation, FeedbackFormData } from '../types';
 
 export default function RecommendationsPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const [selectedRecommendation, setSelectedRecommendation] = useState<Recommendation | null>(null);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [enrichedRecommendations, setEnrichedRecommendations] = useState<Recommendation[]>([]);
 
   // Fetch session profile
   const { data: session, isLoading: sessionLoading } = useQuery({
@@ -33,9 +35,54 @@ export default function RecommendationsPage() {
     refetch: refetchRecommendations,
   } = useQuery({
     queryKey: ['recommendations', sessionId],
-    queryFn: () => recommendationsService.getBySession(Number(sessionId!)),
+    queryFn: async () => {
+      console.log('🔍 Fetching recommendations for session:', sessionId);
+      const result = await recommendationsService.getBySession(Number(sessionId!));
+      console.log('📦 Recommendations received:', result);
+      console.log('📊 Number of recommendations:', result?.length || 0);
+      if (result && result.length > 0) {
+        console.log('🎮 First recommendation:', result[0]);
+        console.log('🎲 First recommendation game:', result[0].game);
+      }
+      return result;
+    },
     enabled: !!sessionId,
   });
+
+  // Enrich recommendations with game data if game is null
+  useEffect(() => {
+    const enrichRecommendations = async () => {
+      if (!recommendations || recommendations.length === 0) {
+        setEnrichedRecommendations([]);
+        return;
+      }
+
+      console.log('🔧 Enriching recommendations with game data...');
+      const enriched = await Promise.all(
+        recommendations.map(async (rec) => {
+          if (rec.game) {
+            console.log('✅ Game already present for recommendation:', rec.id);
+            return rec;
+          }
+          
+          console.log('🔄 Fetching game', rec.game_id, 'for recommendation', rec.id);
+          try {
+            const game = await gamesService.getById(rec.game_id);
+            console.log('✅ Game fetched:', game.name);
+            return { ...rec, game };
+          } catch (error) {
+            console.error('❌ Error fetching game', rec.game_id, ':', error);
+            return rec;
+          }
+        })
+      );
+
+      console.log('🎉 Enriched recommendations:', enriched);
+      setEnrichedRecommendations(enriched);
+    };
+
+    enrichRecommendations();
+  }, [recommendations]);
 
   const handleFeedbackClick = (recommendation: Recommendation) => {
     setSelectedRecommendation(recommendation);
@@ -200,8 +247,8 @@ export default function RecommendationsPage() {
         />
       ) : (
         <RecommendationList
-          recommendations={recommendations || []}
-          loading={recommendationsLoading}
+          recommendations={enrichedRecommendations}
+          loading={recommendationsLoading || (recommendations && recommendations.length > 0 && enrichedRecommendations.length === 0)}
           onFeedback={handleFeedbackClick}
         />
       )}
@@ -215,7 +262,7 @@ export default function RecommendationsPage() {
       />
 
       {/* Help Section */}
-      {recommendations && recommendations.length > 0 && (
+      {enrichedRecommendations && enrichedRecommendations.length > 0 && (
         <div className="mt-8 bg-green-50 border border-green-200 rounded-lg p-6">
           <h3 className="font-semibold text-green-900 mb-3">
             📊 Después de usar un juego
