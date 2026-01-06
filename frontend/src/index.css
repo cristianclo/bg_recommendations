@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: oklch(100% 0 0);
+  --color-foreground: oklch(9% 0.016 285.822);
+  --color-card: oklch(100% 0 0);
+  --color-card-foreground: oklch(9% 0.016 285.822);
+  --color-popover: oklch(100% 0 0);
+  --color-popover-foreground: oklch(9% 0.016 285.822);
+  --color-primary: oklch(62.8% 0.257 263.682);
+  --color-primary-foreground: oklch(98% 0.003 286.375);
+  --color-secondary: oklch(96.1% 0.003 286.375);
+  --color-secondary-foreground: oklch(15.2% 0.033 285.938);
+  --color-muted: oklch(96.1% 0.003 286.375);
+  --color-muted-foreground: oklch(52.1% 0.03 286.067);
+  --color-accent: oklch(96.1% 0.003 286.375);
+  --color-accent-foreground: oklch(15.2% 0.033 285.938);
+  --color-destructive: oklch(63.4% 0.245 29.234);
+  --color-destructive-foreground: oklch(98% 0.003 286.375);
+  --color-border: oklch(91.4% 0.009 286.245);
+  --color-input: oklch(91.4% 0.009 286.245);
+  --color-ring: oklch(62.8% 0.257 263.682);
+  --radius: 0.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  @theme {
+    --color-background: oklch(9% 0.016 285.822);
+    --color-foreground: oklch(98% 0.003 286.375);
+    --color-card: oklch(9% 0.016 285.822);
+    --color-card-foreground: oklch(98% 0.003 286.375);
+    --color-popover: oklch(9% 0.016 285.822);
+    --color-popover-foreground: oklch(98% 0.003 286.375);
+    --color-primary: oklch(70.1% 0.272 264.364);
+    --color-primary-foreground: oklch(15.2% 0.033 285.938);
+    --color-secondary: oklch(21.2% 0.024 285.938);
+    --color-secondary-foreground: oklch(98% 0.003 286.375);
+    --color-muted: oklch(21.2% 0.024 285.938);
+    --color-muted-foreground: oklch(66.9% 0.024 286.033);
+    --color-accent: oklch(21.2% 0.024 285.938);
+    --color-accent-foreground: oklch(98% 0.003 286.375);
+    --color-destructive: oklch(37.3% 0.19 29.234);
+    --color-destructive-foreground: oklch(98% 0.003 286.375);
+    --color-border: oklch(21.2% 0.024 285.938);
+    --color-input: oklch(21.2% 0.024 285.938);
+    --color-ring: oklch(71.3% 0.274 264.531);
+  }
+}
