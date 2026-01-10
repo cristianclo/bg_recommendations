@@ -1,0 +1,35 @@
+# CJEI Board Game Recommendation System - Backend Dependencies
+# Compatible with Python 3.13
+
+# FastAPI and server
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+
+# Database
+sqlalchemy==2.0.36
+alembic==1.14.0
+psycopg2-binary==2.9.10
+
+# Validation and settings
+pydantic==2.10.6
+pydantic-settings==2.7.1
+email-validator==2.2.0
+
+# Security (for future auth modules)
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-dotenv==1.0.0
+
+# Testing
+pytest==7.4.3
+pytest-cov==4.1.0
+httpx==0.25.2
+
+# Code quality
+black==23.11.0
+isort==5.12.0
+flake8==6.1.0
+
+# Utilities
+python-dateutil==2.8.2
